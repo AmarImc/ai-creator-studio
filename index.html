@@ -106,4 +106,95 @@ const buttons=document.getElementById('agents');people.forEach((p,i)=>{const b=d
   render();
 })();
 </script>
+  
+<script>
+(() => {
+  const key = "ai-creator-studio-tasks-v1";
+  const names = [
+    "AI Director", "Media Analyst", "Trend Scout",
+    "Story Director", "Video Editor", "Subtitle Artist",
+    "Sound Designer", "Color Artist", "Quality Manager"
+  ];
+
+  function showTasks() {
+    const panel = document.getElementById("panel");
+    const detail = document.getElementById("detail");
+    if (!panel || !detail) return;
+
+    const heading = detail.querySelector("h2");
+    if (!heading) return;
+
+    const index = names.indexOf(heading.textContent.trim());
+    if (index < 0) return;
+
+    let tasks = [];
+    try {
+      const saved = JSON.parse(localStorage.getItem(key) || "[]");
+      if (Array.isArray(saved)) tasks = saved;
+    } catch (e) {
+      console.warn("Aufgaben nicht lesbar", e);
+    }
+
+    const mine = tasks.filter(t => Number(t.agent) === index);
+    const done = mine.filter(t => t.status === "Erledigt").length;
+    const active = mine.filter(t => t.status === "In Arbeit").length;
+    const percent = mine.length ? Math.round(done / mine.length * 100) : 0;
+
+    const old = detail.querySelector("#employee-tasks");
+    if (old) old.remove();
+
+    const box = document.createElement("div");
+    box.id = "employee-tasks";
+    box.style.cssText = "border-top:1px solid #347d81;margin-top:12px;padding-top:12px;font-size:13px;color:#eaf4ff";
+
+    const title = document.createElement("h3");
+    title.textContent = "Aufgabenübersicht · Phase 1.2";
+    box.appendChild(title);
+
+    const summary = document.createElement("p");
+    summary.textContent = `${mine.length} Aufgaben · ${active} in Arbeit · ${done} erledigt`;
+    box.appendChild(summary);
+
+    const bar = document.createElement("div");
+    bar.style.cssText = "height:9px;background:#253e5a;border-radius:10px;overflow:hidden";
+    const fill = document.createElement("div");
+    fill.style.cssText = `height:100%;width:${percent}%;background:#4de5df`;
+    bar.appendChild(fill);
+    box.appendChild(bar);
+
+    const progress = document.createElement("p");
+    progress.textContent = `Fortschritt: ${percent}%`;
+    box.appendChild(progress);
+
+    mine.forEach(task => {
+      const row = document.createElement("p");
+      row.textContent = `${task.status === "Erledigt" ? "✓" : "•"} ${task.title} — ${task.status}`;
+      box.appendChild(row);
+    });
+
+    if (!mine.length) {
+      const empty = document.createElement("p");
+      empty.textContent = "Noch keine Aufgaben zugewiesen.";
+      box.appendChild(empty);
+    }
+
+    detail.appendChild(box);
+  }
+
+  const panel = document.getElementById("panel");
+  if (!panel) return;
+
+  new MutationObserver(() => {
+    if (panel.classList.contains("open")) showTasks();
+  }).observe(panel, { attributes: true, attributeFilter: ["class"] });
+
+  const chips = document.getElementById("agents");
+  if (chips) {
+    chips.addEventListener("click", () => {
+      setTimeout(showTasks, 0);
+    });
+  }
+})();
+</script>
+
   </body></html>
